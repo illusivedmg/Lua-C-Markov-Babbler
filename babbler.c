@@ -10,9 +10,9 @@
 // #include <lualib.h>
 // #include <lauxlib.h>
 
-#include <lua5.3/lua.h>
-#include <lua5.3/lualib.h>
-#include <lua5.3/lauxlib.h>
+#include <lua5.2/lua.h>
+#include <lua5.2/lualib.h>
+#include <lua5.2/lauxlib.h>
 
 int readFile(lua_State *L) {
     const char *filename = lua_tostring(L, 1);
