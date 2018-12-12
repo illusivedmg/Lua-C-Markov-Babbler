@@ -108,14 +108,17 @@ int parseInput(lua_State *L) {
 int main(int argc, char *argv[]) {
     // The C program starts out in main
     // It checks and parses the command-line arguments.
-    if(argc < 3) {
-        fprintf(stderr, "Usage: %s <filename> <words> [n]", argv[0]);
+    if(argc < 2) {
+        fprintf(stderr, "Usage: %s <filename> [words] [n]", argv[0]);
         return 1;
     }
 
     char *filename = argv[1];
-    int wordcount = atoi(argv[2]), n = 3;
+    int wordcount = 100, n = 3;
 
+    if(argc == 3) {
+        wordcount = atoi(argv[2]);
+    }
     if(argc == 4) {
         n = atoi(argv[3]);
     }
