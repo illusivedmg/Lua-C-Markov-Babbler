@@ -6,10 +6,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-// #include <lua.h>
-// #include <lualib.h>
-// #include <lauxlib.h>
-
 #include <lua5.2/lua.h>
 #include <lua5.2/lualib.h>
 #include <lua5.2/lauxlib.h>
@@ -40,11 +36,20 @@ int readFile(lua_State *L) {
         lua_pushstring(L, buffer);
         free(buffer);
     }
-
     return 1;
 }
 
-// You should write a C function that takes the file content string and an offset into it file as parameters. It returns the next available token as a Lua string, and the offset into the string where the search for the next token should begin. If there are no tokens left in the string, it should return the empty string instead of a valid token. The function should use the following rules:
+int isGutenbergPageNum(char *token, int j) {
+    if(token[j - 1] == 'm') {
+        for(int i = 0; i < j - 1; i++) {
+            if(!isdigit(token[i])) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+    return 0;
+}
 
 int parseInput(lua_State *L) {
     const char *corpus = lua_tostring(L, 1);
@@ -87,7 +92,7 @@ int parseInput(lua_State *L) {
 
     // send to lua if it's not a project gutenberg page number
 
-    if((j == 5 || j == 6) && (token[j - 1] == 'm' && isdigit(token[j - 2]) && isdigit(token[j - 3]))) {
+    if((j == 5 || j == 6) && isGutenbergPageNum(token, j)) {
         lua_pushstring(L, 0);
         lua_pushinteger(L, end); // new offset
     } else {
@@ -106,8 +111,6 @@ int parseInput(lua_State *L) {
 }
 
 int main(int argc, char *argv[]) {
-    // The C program starts out in main
-    // It checks and parses the command-line arguments.
     if(argc < 2) {
         fprintf(stderr, "Usage: %s <filename> [words] [n]", argv[0]);
         return 1;
@@ -123,16 +126,11 @@ int main(int argc, char *argv[]) {
         n = atoi(argv[3]);
     }
 
-    // It initializes the Lua environment and registers C functions    that can be called from Lua
-
-    // Create new Lua state and load the lua libraries
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
 
     lua_register(L, "readFile", readFile);
     lua_register(L, "parseInput", parseInput);
-
-    // It calls a Lua function to drive the rest of the process
 
     luaL_dofile(L, "babbler.lua");
     lua_getglobal(L, "main");

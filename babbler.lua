@@ -2,8 +2,9 @@ function parseInputHelper(corpus, n)
     local offset = 0
     local tokens = {}
 
-    while (offset < string.len(corpus)) do
-        local token
+    local token = ""
+
+    while (token ~= nil) do
         token, offset = parseInput(corpus, offset)
 
         if token ~= '' then
