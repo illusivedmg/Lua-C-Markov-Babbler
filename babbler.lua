@@ -1,13 +1,27 @@
+function isNotGutenbergPageNum(token)
+    local char = token:sub(#token,#token)
+    if char == 'm' then
+        for i = 1, #token - 1 do
+            char = token:sub(i,i)
+            if tonumber(char) == nil then
+                return true
+            end
+        end
+        return false
+    end
+    return true
+end
+
 function parseInputHelper(corpus, n)
     local offset = 0
     local tokens = {}
 
     local token = ""
 
-    while (token ~= nil) do
+    while offset < #corpus do
         token, offset = parseInput(corpus, offset)
 
-        if token ~= '' then
+        if token ~= '' and isNotGutenbergPageNum(token) then
             table.insert(tokens, token)
         end
     end

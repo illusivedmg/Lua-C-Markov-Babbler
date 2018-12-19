@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+// apt install lua5.2 liblua5.2
 #include <lua5.2/lua.h>
 #include <lua5.2/lualib.h>
 #include <lua5.2/lauxlib.h>
@@ -15,33 +16,47 @@ int readFile(lua_State *L) {
     char *buffer;
     int rc;
     long length;
+
     FILE *fin = fopen(filename, "rb");
-
-    if(fin) {
-        rc = fseek(fin, 0, SEEK_END);
-        assert(rc >= 0);
-        length = ftell(fin);
-        rc = fseek(fin, 0, SEEK_SET);
-        assert(rc >= 0);
-        buffer = malloc(length + 1);
-        if( buffer ) {
-            fread(buffer, length, 1, fin);
-        }
-        
-        rc = fclose(fin);
-        assert(rc >= 0);
-
-        // printf(buffer);
-        buffer[length] = 0;
-        lua_pushstring(L, buffer);
-        free(buffer);
+    if(!fin) {
+        perror("error opening file");
+        exit(1);
     }
+
+    rc = fseek(fin, 0, SEEK_END);
+    assert(rc >= 0);
+
+    length = ftell(fin);
+
+    rc = fseek(fin, 0, SEEK_SET);
+    assert(rc >= 0);
+
+    buffer = malloc(length + 1);
+    if(buffer == NULL) {
+        fprintf(stderr, "error in malloc\n");
+        exit(1);
+    }
+
+    fread(buffer, length, 1, fin);
+    
+    rc = fclose(fin);
+    assert(rc >= 0);
+
+    // null term for lua_pushstring
+    buffer[length] = 0;
+
+    lua_pushstring(L, buffer);
+    free(buffer);
+
+    // success - returns # of args for lua
     return 1;
 }
 
-int isGutenbergPageNum(char *token, int j) {
-    if(token[j - 1] == 'm') {
-        for(int i = 0; i < j - 1; i++) {
+// checks if token is proj gutenberg page num of format "12345m"
+// moved to lua
+int isGutenbergPageNum(char *token, int len) {
+    if(token[len - 1] == 'm') {
+        for(int i = 0; i < len - 1; i++) {
             if(!isdigit(token[i])) {
                 return 0;
             }
@@ -59,7 +74,7 @@ int parseInput(lua_State *L) {
     int start, end;
     size_t toklen;
 
-    // splits corpus by spaces
+    // finds token by splitting corpus by spaces
     start = offset;
     while(start < corpuslen && isspace(corpus[start])) {
         start++;
@@ -74,6 +89,10 @@ int parseInput(lua_State *L) {
     toklen = end - start;
     rawtoken = malloc(toklen + 1);
     token = malloc(toklen + 1);
+    if(rawtoken == NULL || token == NULL) {
+        fprintf(stderr, "error in malloc\n");
+        exit(1);
+    }
 
     for(int i = 0; i < toklen; i++) {
         rawtoken[i] = corpus[start + i];
@@ -90,19 +109,9 @@ int parseInput(lua_State *L) {
         }
     }
 
-    // send to lua if it's not a project gutenberg page number
-
-    if((j == 5 || j == 6) && isGutenbergPageNum(token, j)) {
-        lua_pushstring(L, 0);
-        lua_pushinteger(L, end); // new offset
-    } else {
-        // lua_pushlstring(L, token, toklen);
-
-        // null-terminate (lua_pushstring vs. pushlstring)
-        token[j] = 0;
-        lua_pushstring(L, token);
-        lua_pushinteger(L, end); // new offset
-    }
+    token[j] = 0;
+    lua_pushstring(L, token);
+    lua_pushinteger(L, end); // new offset
 
     free(rawtoken);
     free(token);
