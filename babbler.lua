@@ -1,13 +1,17 @@
+-- checks if token is proj gutenberg page num of format "12345m"
 function isNotGutenbergPageNum(token)
-    local char = token:sub(#token,#token)
-    if char == 'm' then
-        for i = 1, #token - 1 do
-            char = token:sub(i,i)
-            if tonumber(char) == nil then
-                return true
+    if #token == 5 or #token == 6 then
+        local char = token:sub(#token,#token)
+        if char == 'm' then
+            for i = 1, #token - 1 do
+                char = token:sub(i,i)
+                if tonumber(char) == nil then
+                    return true
+                end
             end
+            return false
         end
-        return false
+        return true
     end
     return true
 end
@@ -67,21 +71,21 @@ function makePrefixTable(shingles)
 end
 
 function main(fname, wordcount, n)
-    -- The Lua code calls a C function to load the input file, returning it as Lua string
+    -- Calls C function to load the input file, returning it as Lua string
     local corpus = readFile(fname)
 
-    -- The Lua code calls a C function to parse the input string. It passes in the string and an offset (see below) and gets back a single new token and a new offset. It calls this many times, resulting in a list of tokens in Lua.
+    -- Call C function to parse the input string
     local tokens, total = parseInputHelper(corpus, n)
 
-    -- The Lua code generates n-grams, then shingles, then a table of prefixes mapped to last words (see below).
+    -- Generates n-grams, then shingles, then a table of prefixes mapped to last words
     local shingles = makeShingles(tokens, total, n)
 
     local prefixes = makePrefixTable(shingles)
 
-    -- The Lua code babbles the requested number of words to the console
+    -- Babble the requested number of words to the console
 
+    -- Find random first shingle
     math.randomseed(os.time())
-    
     local shingle = shingles[math.random(#shingles)]
 
     for i = 0, wordcount do

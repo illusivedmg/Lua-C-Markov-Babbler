@@ -46,9 +46,10 @@ int readFile(lua_State *L) {
     buffer[length] = 0;
 
     lua_pushstring(L, buffer);
+
     free(buffer);
 
-    // success - returns # of args for lua
+    // success - returns # of args for lua (corpus)
     return 1;
 }
 
@@ -116,11 +117,12 @@ int parseInput(lua_State *L) {
     free(rawtoken);
     free(token);
 
+    // success - passes # args to lua (token and new offset)
     return 2;
 }
 
 int main(int argc, char *argv[]) {
-    if(argc < 2) {
+    if(argc < 2 || argc > 4) {
         fprintf(stderr, "Usage: %s <filename> [words] [n]", argv[0]);
         return 1;
     }
