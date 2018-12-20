@@ -1,8 +1,6 @@
 Lua/C Markov Babbler
 ======
 
-A Markov babbler written in Lua and C.
-
 Dependencies:
 * lua5.2
 * liblua5.2
