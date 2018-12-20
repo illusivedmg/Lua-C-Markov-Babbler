@@ -1,10 +1,15 @@
-# Lua/C Markov Babbler
+Lua/C Markov Babbler
+======
 
-A Markov babbler written in Lua and C
+A Markov babbler written in Lua and C.
 
-"make run" will run babbler on included text file (The Count of Monte Cristo by Alexandre Dumas, from Project Gutenberg) with a default wordcount of 200 and n-gram size of 4.
+Dependencies:
+* lua5.2
+* liblua5.2
 
-Else use with ./babbler <filename> [wordcount] [n-gram size]
+`make run` will run babbler on included text file (*The Count of Monte Cristo* by Alexandre Dumas, from Project Gutenberg) with a default wordcount of 200 and n-gram size of 4.
+
+Else use with `./babbler <filename> [wordcount] [n-gram size]`
 
 Keeps:
 * Accented characters regardless of locale
@@ -15,7 +20,3 @@ Automatically culls:
 * Extended punctuation like left/right double/single quotes and long dashes
 
 All without modification of input file save removal of Proj Gutenberg header/footers
-
-Dependencies:
-* lua5.2
-* liblua5.2
