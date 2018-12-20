@@ -12,7 +12,7 @@ Else use with `./babbler <filename> [wordcount] [n-gram size]`
 Keeps:
 * Accented characters regardless of locale
 
-Automatically culls:
+Culls:
 * Page numbers of the format "12345m"
 * Chapter headings
 * Extended punctuation like left/right double/single quotes and long dashes
