@@ -6,7 +6,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-// apt install lua5.2 liblua5.2
 #include <lua5.2/lua.h>
 #include <lua5.2/lualib.h>
 #include <lua5.2/lauxlib.h>
@@ -31,6 +30,7 @@ int readFile(lua_State *L) {
     rc = fseek(fin, 0, SEEK_SET);
     assert(rc >= 0);
 
+    // buffer for corpus and null-term
     buffer = malloc(length + 1);
     if(buffer == NULL) {
         fprintf(stderr, "error in malloc\n");
@@ -44,52 +44,54 @@ int readFile(lua_State *L) {
 
     // null term for lua_pushstring
     buffer[length] = 0;
-
     lua_pushstring(L, buffer);
+
+    lua_pushinteger(L, length);
 
     free(buffer);
 
-    // success - returns # of args for lua (corpus)
-    return 1;
+    // success - returns # of args for lua (corpus, length)
+    return 2;
 }
 
 // checks if token is proj gutenberg page num of format "12345m"
 // moved to lua
-int isGutenbergPageNum(char *token, int len) {
-    if(token[len - 1] == 'm') {
-        for(int i = 0; i < len - 1; i++) {
-            if(!isdigit(token[i])) {
-                return 0;
-            }
-        }
-        return 1;
-    }
-    return 0;
-}
+// int isGutenbergPageNum(char *token, int len) {
+//     if(token[len - 1] == 'm') {
+//         for(int i = 0; i < len - 1; i++) {
+//             if(!isdigit(token[i])) {
+//                 return 0;
+//             }
+//         }
+//         return 1;
+//     }
+//     return 0;
+// }
 
 int parseInput(lua_State *L) {
     const char *corpus = lua_tostring(L, 1);
     const int corpuslen = lua_rawlen(L, 1);
     const int offset = lua_tonumber(L, 2);
+
     char *rawtoken, *token;
     int start, end;
     size_t toklen;
 
-    // finds token by splitting corpus by spaces
+    // finds token by splitting corpus by spaces and punctuation
     start = offset;
-    while(start < corpuslen && isspace(corpus[start])) {
+    while(start < corpuslen && (isspace(corpus[start]) || ispunct(corpus[start]))) {
         start++;
     }
 
     end = start;
-    while(end < corpuslen && !isspace(corpus[end])) {
+    while(end < corpuslen && !(isspace(corpus[end]) || ispunct(corpus[end]))) {
         end++;
     }
 
-    // create buffer to store raw token and processed token + null term
+    // create buffer to store raw token and processed token
     toklen = end - start;
-    rawtoken = malloc(toklen + 1);
-    token = malloc(toklen + 1);
+    rawtoken = malloc(toklen);
+    token = malloc(toklen);
     if(rawtoken == NULL || token == NULL) {
         fprintf(stderr, "error in malloc\n");
         exit(1);
@@ -102,21 +104,25 @@ int parseInput(lua_State *L) {
     // process raw token
     int j = 0;
     for(int i = 0; i < toklen; i++) {
-        // if is alphanumeric
-        if( isalnum(rawtoken[i]) ) {
-            // to lowercase
-            token[j] = tolower(rawtoken[i]);
-            j++;
+        // check if alphanumeric
+        // reason for mess - isalnum/iswalnum culls accented characters even in specified locales
+        // && ispunct doesn't catch extended punctuation, e.g. left/right single/double quotes or long dashes
+        if(!iscntrl(rawtoken[i])) {
+            if(rawtoken[i] == -30 && i <= toklen - 2 && rawtoken[i + 1] == -128) {
+                i = i + 2;
+            } else {
+                token[j] = tolower(rawtoken[i]);
+                j++;
+            }
         }
     }
 
-    token[j] = 0;
-    lua_pushstring(L, token);
+    lua_pushlstring(L, token, j);
     lua_pushinteger(L, end); // new offset
 
     free(rawtoken);
     free(token);
-
+    
     // success - passes # args to lua (token and new offset)
     return 2;
 }
@@ -142,9 +148,15 @@ int main(int argc, char *argv[]) {
 
     lua_register(L, "readFile", readFile);
     lua_register(L, "parseInput", parseInput);
+     
+    char *luafile = "babbler.lua";
+    // returns 0 for success
+    if(luaL_dofile(L, luafile)) {
+        printf("Error opening %s file\n", luafile);
+		return 1;
+    }
 
-    luaL_dofile(L, "babbler.lua");
-    lua_getglobal(L, "main");
+    lua_getglobal(L, "luamain");
     lua_pushstring(L, filename);
     lua_pushnumber(L, wordcount);
     lua_pushnumber(L, n);

@@ -16,17 +16,28 @@ function isNotGutenbergPageNum(token)
     return true
 end
 
-function parseInputHelper(corpus, n)
+function parseInputHelper(corpus, corplen, n)
     local offset = 0
     local tokens = {}
 
+    local chpt = false
+
     local token = ""
 
-    while offset < #corpus do
+    while offset < corplen do
         token, offset = parseInput(corpus, offset)
 
-        if token ~= '' and isNotGutenbergPageNum(token) then
-            table.insert(tokens, token)
+        if token == "chapter" then
+            chpt = true
+        elseif token ~= '' and isNotGutenbergPageNum(token) then
+            if chpt then
+                if tonumber(token) == nil then
+                    table.insert(tokens, token)
+                end
+                chpt = false
+            else
+                table.insert(tokens, token)
+            end
         end
     end
 
@@ -70,12 +81,12 @@ function makePrefixTable(shingles)
     return prfxs
 end
 
-function main(fname, wordcount, n)
+function luamain(fname, wordcount, n)
     -- Calls C function to load the input file, returning it as Lua string
-    local corpus = readFile(fname)
+    local corpus, corplen = readFile(fname)
 
     -- Call C function to parse the input string
-    local tokens, total = parseInputHelper(corpus, n)
+    local tokens, total = parseInputHelper(corpus, corplen, n)
 
     -- Generates n-grams, then shingles, then a table of prefixes mapped to last words
     local shingles = makeShingles(tokens, total, n)
