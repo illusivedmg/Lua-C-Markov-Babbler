@@ -33,7 +33,7 @@ int readFile(lua_State *L) {
     // buffer for corpus and null-term
     buffer = malloc(length + 1);
     if(buffer == NULL) {
-        fprintf(stderr, "error in malloc\n");
+        fprintf(stderr, "Error with file buffer malloc\n");
         exit(1);
     }
 
@@ -93,8 +93,8 @@ int parseInput(lua_State *L) {
     rawtoken = malloc(toklen);
     token = malloc(toklen);
     if(rawtoken == NULL || token == NULL) {
-        fprintf(stderr, "error in malloc\n");
-        exit(1);
+        fprintf(stderr, "Error in parser malloc\n");
+        exit(1); 
     }
 
     for(int i = 0; i < toklen; i++) {
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
     // returns 0 for success
     if(luaL_dofile(L, luafile)) {
         printf("Error opening %s file\n", luafile);
-		return 1;
+        return 1;
     }
 
     lua_getglobal(L, "luamain");

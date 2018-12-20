@@ -17,4 +17,4 @@ Automatically culls:
 * Chapter headings
 * Extended punctuation like left/right double/single quotes and long dashes
 
-All without modification of input file save removal of Proj Gutenberg header/footers
+All without prior modification of input file save removal of Proj Gutenberg header/footers
